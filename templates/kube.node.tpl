@@ -21,15 +21,15 @@ apt:
       keyserver: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
       keyid: 54A6 47F9 048D 5688 D7DA 2ABE 6A03 0B21 BA07 F4FB
         
-        
 
 packages:
     - netplan.io
     - docker.io
     - apt-transport-https
-    - kubelet=1.15.10-00
-    - kubeadm=1.15.10-00
-    - kubectl=1.15.10-00 
+    - nfs-common
+    - kubelet=1.16.8-00
+    - kubeadm=1.16.8-00
+    - kubectl=1.16.8-00 
 
 # Config
 write_files:
@@ -41,15 +41,13 @@ write_files:
         renderer: networkd
         ethernets:
             ens3:
-                dhcp4: true
-            ens4:
-                dhcp4: no
-                addresses: 
-                    - ${ public_ip_address }
-                gateway4: ${ gateway } 
-                nameservers:
-                    addresses:
-                        - ${ gateway } 
+              dhcp4: no
+              addresses: 
+                - ${ public_ip_address }
+              gateway4: ${ gateway } 
+              nameservers:
+                addresses:
+                    - ${ gateway } 
 - owner: root:root
   path: /etc/docker/daemon.json
   content: |

@@ -26,7 +26,7 @@ resource "libvirt_cloudinit_disk" "master" {
 }
 
 resource "libvirt_cloudinit_disk" "node" {
-  count     = 2
+  count     = var.small-node-count + var.medium-node-count + 1
   name      = "cloudinit_node_${count.index}.iso"
   pool      = "images"
   user_data = data.template_file.node[count.index].rendered
@@ -39,13 +39,6 @@ resource "libvirt_domain" "k8s-master" {
   vcpu   = 2
 
   cloudinit = libvirt_cloudinit_disk.master.id
-
-  network_interface {
-    addresses      = []
-    hostname       = "k8s-master"
-    bridge         = "kubenet"
-    wait_for_lease = false
-  }
 
   network_interface {
     addresses      = []
@@ -72,17 +65,17 @@ resource "libvirt_domain" "k8s-master" {
 }
 
 resource "libvirt_domain" "k8s-node-small" {
-  count  = 2
+  count  = var.small-node-count
   name   = "k8s-node-${count.index + 1}"
   memory = "4096"
-  vcpu   = var.small-node-count
+  vcpu   = 2
 
   cloudinit = libvirt_cloudinit_disk.node[count.index].id
 
   network_interface {
     addresses      = []
     hostname       = "k8s-node-${count.index + 1}"
-    bridge         = "kubenet"
+    bridge         = "br0"
     wait_for_lease = false
   }
 
@@ -105,21 +98,21 @@ resource "libvirt_domain" "k8s-node-small" {
 
 resource "libvirt_domain" "k8s-node-medium" {
   count  = var.medium-node-count
-  name   = "k8s-node-${count.index + var.small-node-count}"
+  name   = "k8s-node-${count.index + var.small-node-count + 1}"
   memory = "8192"
   vcpu   = 4
 
-  cloudinit = libvirt_cloudinit_disk.node[count.index + var.small-node-count].id
+  cloudinit = libvirt_cloudinit_disk.node[count.index + var.small-node-count + 1].id
 
   network_interface {
     addresses      = []
     hostname       = "k8s-node-${count.index + var.small-node-count + 1}"
-    bridge         = "kubenet"
+    bridge         = "br0"
     wait_for_lease = false
   }
 
   disk {
-    volume_id = libvirt_volume.ubuntu[count.index + var.small-node-count].id
+    volume_id = libvirt_volume.ubuntu[count.index + var.small-node-count + 1].id
   }
 
   console {
